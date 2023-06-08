@@ -78,15 +78,13 @@ app.get('/exchange-code', async (req, res) => {
 // API of Dictionary
 app.get('/dict', async (req, res) => {
   console.log('/dict, récupération du dictionnaire');
-  /*
   try {
     data = await client.db(clusterName).collection(collectionName).find().toArray();
     res.send(data);
   } catch (err) {
     console.error(err);
   }
-  */
-  res.send(DEBUG_DICT);
+  // res.send(DEBUG_DICT);
 });
 
 app.listen(PORT, () => {
