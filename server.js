@@ -36,7 +36,7 @@ client.connect(async (err) => {
 */
 
 // Discord OAuth
-app.use('/auth', express.static('./dist/'));
+app.get('/auth', express.static('./dist/'));
 
 app.get('/exchange-code', async (req, res) => {
   try {
