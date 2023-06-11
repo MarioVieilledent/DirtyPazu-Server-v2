@@ -24,9 +24,9 @@ const client = new MongoClient(uri, {
 });
 const clusterName = 'PazuSarl';
 
-const collectionName = 'DibiDictonary';
+const collectionDictionaryName = 'DibiDictonary';
+const collectionDiscordProfilesName = 'DiscordProfiles'
 const collectionSuggestionName = 'Suggestion'
-const collectionProfilesName = 'Profiles'
 const collectionLogsName = 'logsDirtyPazu';
 
 /*
@@ -39,6 +39,7 @@ client.connect(async (err) => {
 app.use('/auth', express.static('./dist/'));
 
 app.get('/exchange-code', async (req, res) => {
+  console.log('/exchange-code, user connected');
   try {
     const response = await axios.post(
       'https://discord.com/api/oauth2/token',
@@ -59,16 +60,46 @@ app.get('/exchange-code', async (req, res) => {
 
     // Use the response data as needed
     const accessToken = response.data;
-    console.log(accessToken);
 
+    // Get the information about the user just logged in
     const userResponse = await axios.get('https://discord.com/api/users/@me', {
       headers: {
         Authorization: `Bearer ${accessToken.access_token}`,
       },
     });
 
-    // Use the user data as needed
-    res.send(userResponse.data);
+    // Add Discord user to mongodb
+    const allUsers = await client.db(clusterName).collection(collectionDiscordProfilesName).find().toArray();
+
+    // Check if the user is new
+    let userConnected = {};
+
+    let alreadyExist = false;
+    allUsers.forEach(user => {
+      if (user.discord.email === userResponse.data.email) {
+        alreadyExist = true;
+        userConnected = user; // Gathering all data from user
+      }
+    });
+    
+    if (alreadyExist) { // User already exist
+      console.log('already exist');
+      await client.db(clusterName).collection(collectionDiscordProfilesName).updateOne({ 'discord.id': userConnected.discord.id }, { $push: { connections: Date.now() }, $inc: {xp: 0.1} })
+
+    } else { // If new user
+      console.log('new user, profile creation');
+      userConnected = {
+        discord: userResponse.data,
+        roles: ['default'],
+        xp: 0.0,
+        money: 0.0,
+        connections: [Date.now()]
+      };
+      await client.db(clusterName).collection(collectionDiscordProfilesName).insertOne(userConnected)
+    }
+
+    // Send User Info to client
+    res.send(userConnected);
   } catch (error) {
     console.error('Error exchanging authorization code:', error);
     res.status(500).send('An error occurred while exchanging the authorization code.');
@@ -77,14 +108,14 @@ app.get('/exchange-code', async (req, res) => {
 
 // API of Dictionary
 app.get('/dict', async (req, res) => {
-  console.log('/dict, récupération du dictionnaire');
+  console.log('/dict, fetching dictionary');
   try {
-    data = await client.db(clusterName).collection(collectionName).find().toArray();
+    data = await client.db(clusterName).collection(collectionDictionaryName).find().toArray();
     res.send(data);
   } catch (err) {
     console.error(err);
+    res.send(DEBUG_DICT);
   }
-  // res.send(DEBUG_DICT);
 });
 
 app.listen(PORT, () => {
