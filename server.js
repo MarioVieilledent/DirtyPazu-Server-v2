@@ -25,6 +25,7 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   }
 });
+
 const clusterName = 'PazuSarl';
 
 const collectionDictionaryName = 'DibiDictonary';
@@ -42,7 +43,7 @@ client.connect(async (err) => {
 app.use('/auth', express.static('./dist/'));
 
 app.get('/exchange-code', async (req, res) => {
-  console.log('/exchange-code, user connected');
+  console.log('/exchange-code');
   try {
     const response = await axios.post(
       'https://discord.com/api/oauth2/token',
@@ -105,7 +106,7 @@ app.get('/exchange-code', async (req, res) => {
     res.send(userConnected);
   } catch (error) {
     console.error('Error exchanging authorization code:', error);
-    res.status(500).send('An error occurred while exchanging the authorization code.');
+    res.status(500).send({err: 'Error exchanging authorization code: ' + error});
   }
 });
 
