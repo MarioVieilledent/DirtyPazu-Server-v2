@@ -106,7 +106,7 @@ app.get('/exchange-code', async (req, res) => {
     res.send(userConnected);
   } catch (error) {
     console.error('Error exchanging authorization code:', error);
-    res.status(500).send({err: 'Error exchanging authorization code: ' + error});
+    res.status(500).send({ err: 'Error exchanging authorization code: ' + error });
   }
 });
 
@@ -148,7 +148,7 @@ app.get('/suggestions', async (req, res) => {
     res.send(data);
   } catch (err) {
     console.error(err);
-    res.send(DEBUG_DICT);
+    res.send({ err });
   }
 });
 
